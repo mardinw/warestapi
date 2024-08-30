@@ -18,6 +18,11 @@ whatsappClient.on("message", async (msg) => {
             const contact = await msg.getContact();
             console.log(contact, msg.body)
         }
+
+        if (msg.body.toLowerCase().includes('hi') ) {
+            msg.reply('Hello! Ada yang bisa dibantu?');
+        }
+
     } catch (error){
         console.log(error);
     }
