@@ -49,11 +49,11 @@ function sleep(ms) {
 
 whatsappClient.on("message", async (msg) => {
     try {
+        const isGroup = msg.from.includes('@g.us');
+
         await sleep(5000); 
 
-        console.log(msg);
-
-        if (msg.isGroupMsg) {
+        if (isGroup) {
             console.log('Pesan diterima dari group, bot tidak akan merespons.');
             return;
         }
