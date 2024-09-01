@@ -51,7 +51,7 @@ whatsappClient.on("message", async (msg) => {
     try {
         const isGroup = msg.from.includes('@g.us');
 
-        await sleep(5000); 
+        await sleep(3000); 
 
         if (isGroup) {
             console.log('Pesan diterima dari group, bot tidak akan merespons.');
