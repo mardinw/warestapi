@@ -21,8 +21,9 @@ async function getChatAIResponse(userMessage) {
             }
         });
 
-        console.log(response.data.choices[0].message);
-        const botResponse = response.data.choices[0].message.content;
+        let botResponse = response.data.choices[0].message.content;
+
+        botResponse = botResponse.replace(/Meta/g, 'Develop AI').replace(/Llama/g, 'Obot');
         return botResponse;
         
     } catch (error) {
