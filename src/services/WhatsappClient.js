@@ -22,10 +22,9 @@ function sleep(ms) {
 whatsappClient.on("message", async (msg) => {
     try {
         const isGroup = msg.from.includes('@g.us');
+        const isNewsLetter = msg.from.includes('@newsletter');
 
-        await sleep(3000); 
-
-        if (isGroup) {
+        if (isGroup || isNewsLetter) {
             console.log('Pesan diterima dari group, bot tidak akan merespons.');
             return;
         }
@@ -34,19 +33,16 @@ whatsappClient.on("message", async (msg) => {
             console.log(contact, msg.body)
         }
 
-        // if (msg.body.toLowerCase().includes('hi') ) {
-        //     msg.reply('Hello! Ada yang bisa dibantu?');
-        // }
         const userMessage = msg.body.toLowerCase();
         const botResponse = await getChatAIResponse(userMessage);
 
+        await sleep(3000); 
+        
         if (userMessage.includes('list file')) {
             const sheets = await listSheets(process.env.GOOGLE_SPREADSHEET_ID);
             whatsappClient.sendMessage(msg.from, `SpreadSheet files: ${sheets.join(', ')}`);
         } else if (userMessage.includes('tampilkan nilai')) {
             try {
-                const result = await getChatAIResponse(userMessage);
-                console.log('LLama response:', result);
                 const keyword = extractKeyword(userMessage);
                 console.log('Extracted keyword:', keyword);
 
@@ -66,7 +62,7 @@ whatsappClient.on("message", async (msg) => {
         } else {
             msg.reply(botResponse);
         }
-        //msg.reply(botResponse);
+        
 
     } catch (error){
         console.log(error);
@@ -74,7 +70,7 @@ whatsappClient.on("message", async (msg) => {
 })
 
 const extractKeyword = (message) => {
-    const keyword = message.split(' ');
+    const keyword = message.split(' ').pop().toLowerCase();
     console.log(keyword);
     return keyword;
 }
@@ -84,24 +80,14 @@ const findValueInSheet = (sheetData, keywords) => {
         return `Data tidak ditemukan atau kosong.`;
     }
 
-    // const results = [];
-    // keywords.forEach(keyword => {
-    //     const foundRow = sheetData.find(row => row[1].toLowerCase() === keyword);
-    //     if (foundRow) {
-    //         results.push(`Data untuk ${keyword}: ${foundRow.join(', ')}`);
-    //     }
-    // });
-    // console.log(results);
 
-    console.log(keywords);
-    return keywords.map(keyword => {
-        const foundRow = sheetData.find(row => row[1].toLowerCase() === keyword);
-        if (foundRow) {
-            return `Data untuk ${keyword}: ${foundRow.join(', ')}`;
-        } else {
-            return;
-        }
-    })
+    const foundRow = sheetData.find(row => row[1].toLowerCase() === keywords);
+
+    if (foundRow) {
+        return `Data untuk ${keywords}: ${foundRow.join(', ')}`
+    } else {
+        return;
+    }
 }
 
 module.exports = whatsappClient

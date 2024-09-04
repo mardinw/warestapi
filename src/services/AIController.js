@@ -1,29 +1,27 @@
 require('dotenv').config();
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const axios = require('axios');
 
-const AIKey = process.env.OPENROUTER_API_KEY;
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_AI_KEY)
 
-const AIApiUrl = process.env.AIAPIUrl;
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
+
+const generationConfig = {
+    temperature: 0.7,
+    topP: 0.95,
+    topK: 64,
+    maxOutputTokens: 300,
+    responseMimeType: "text/plain",
+};
 
 async function getChatAIResponse(userMessage) {
     try {
-        const response = await axios.post(AIApiUrl, {
-            model: 'meta-llama/llama-3.1-8b-instruct:free',
-            messages: [
-                { role: 'user', content: userMessage }
-            ],
-            max_tokens: 200,
-            temperature: 0.7,
-        }, {
-            headers: {
-                'Authorization': `Bearer ${AIKey}`,
-                'Content-Type': 'application/json'
-            }
+        const chatSession = model.startChat({
+            generationConfig,
         });
 
-        let botResponse = response.data.choices[0].message.content;
-
-        botResponse = botResponse.replace(/Meta/g, 'Develop AI').replace(/Llama/g, 'Obot');
+        const result = await chatSession.sendMessage(userMessage);
+        let botResponse = result.response.text();
         return botResponse;
         
     } catch (error) {
