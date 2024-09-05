@@ -44,12 +44,10 @@ whatsappClient.on("message", async (msg) => {
         } else if (userMessage.includes('tampilkan nilai')) {
             try {
                 const keyword = extractKeyword(userMessage);
-                console.log('Extracted keyword:', keyword);
 
                 if (keyword) {
                     const range = `Nilai!A1:Z100`;
                     const data = await readSheet(process.env.GOOGLE_SPREADSHEET_ID, range);
-                    console.log('Sheet data:', data);
                     const foundValue = findValueInSheet(data, keyword);
 
                     whatsappClient.sendMessage(msg.from, foundValue);
@@ -70,8 +68,7 @@ whatsappClient.on("message", async (msg) => {
 })
 
 const extractKeyword = (message) => {
-    const keyword = message.split(' ').pop().toLowerCase();
-    console.log(keyword);
+    const keyword = message.toLowerCase().split(' ');
     return keyword;
 }
 
@@ -80,13 +77,16 @@ const findValueInSheet = (sheetData, keywords) => {
         return `Data tidak ditemukan atau kosong.`;
     }
 
-
-    const foundRow = sheetData.find(row => row[1].toLowerCase() === keywords);
-
-    if (foundRow) {
-        return `Data untuk ${keywords}: ${foundRow.join(', ')}`
-    } else {
-        return;
+    const resultSearch = [];
+    keywords.forEach(keyword => {
+        const searchFound = sheetData.find(row => row[1].toLowerCase() === keyword);
+        if (searchFound) {
+            resultSearch.push(searchFound);
+        }
+    });
+    console.log('resultSearch:', resultSearch);
+    if (resultSearch.length > 0) {
+        return resultSearch.map(row => `Nama: ${row[1]}, Nilai: ${row[2]}`).join('\n');
     }
 }
 
