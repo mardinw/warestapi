@@ -1,4 +1,4 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Client, LocalAuth, Buttons } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const { getChatAIResponse } = require('./AIController');
 const { listSheets, readSheet } = require('./GoogleServices');
@@ -10,9 +10,16 @@ const whatsappClient = new Client({
     }
 });
 
+let isAppReady = false;
+let appStartTime;
+
 whatsappClient.on("qr", (qr) => qrcode.generate(qr, {small: true}));
 
-whatsappClient.on("ready", () => console.log("client is ready!"));
+whatsappClient.on("ready", () => {
+    console.log("WA Client is ready!");
+    appStartTime = new Date();
+    isAppReady = true;
+});
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -21,9 +28,14 @@ function sleep(ms) {
 
 whatsappClient.on("message", async (msg) => {
     try {
+        if (!isAppReady) {
+            console.log('Aplikasi belum siap, pesan tidak akan direspons.');
+            return;
+        }
+
         const isGroup = msg.from.includes('@g.us');
         const isNewsLetter = msg.from.includes('@newsletter');
-
+        
         if (isGroup || isNewsLetter) {
             console.log('Pesan diterima dari group, bot tidak akan merespons.');
             return;
@@ -36,12 +48,22 @@ whatsappClient.on("message", async (msg) => {
         const userMessage = msg.body.toLowerCase();
         const botResponse = await getChatAIResponse(userMessage);
 
-        await sleep(3000); 
+        await sleep(2000); 
         
         if (userMessage.includes('list file')) {
             const sheets = await listSheets(process.env.GOOGLE_SPREADSHEET_ID);
-            whatsappClient.sendMessage(msg.from, `SpreadSheet files: ${sheets.join(', ')}`);
-        } else if (userMessage.includes('tampilkan nilai')) {
+
+            const buttons = [
+                { body: 'Nilai Ipin'},
+                { body: 'Nilai Upin'},
+            ];
+
+            const buttonMessage = new Buttons("Tampilkan nilai yang ada disini", buttons, "Tampilkan nilai", "Silahkan pilih");
+            
+            // whatsappClient.sendMessage(msg.from, `SpreadSheet files: ${sheets.join(', ')}`);
+            console.log(buttonMessage);
+            await whatsappClient.sendMessage(msg.from, buttonMessage);
+        } else if (userMessage.includes('nilai')) {
             try {
                 const keyword = extractKeyword(userMessage);
 
